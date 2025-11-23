@@ -1,36 +1,54 @@
-# PharmaHacks 2025  
-## Challenge: Predict Kinase Selectivity Using Machine Learning  
+# kiNNet: Kinase Selectivity Prediction
 
-### Repository Contents  
+**2nd Place Winner & Best Pitch at PharmaHacks 2025 (Molecular Forecaster Challenge)**
 
-- **`all_seqs.pkl`**  
-  A pickled version of all amino acid sequences for each kinase.  
+A biochemistry-informed neural network designed to predict the selectivity profiles of small molecule inhibitors against the human kinome. This tool aids in drug discovery by prioritizing compounds that bind specifically to target kinases while minimizing off-target effects.
 
-- **`global_embeddings_max_length.npy`**  
-  A NumPy array of the global embeddings for each amino acid sequence obtained with ProteinBert.  
-  **Note:** Local embeddings are not included in this repository but can be obtained from the same model.  
+## 🧪 The Problem
 
-- **`global_embeddings_map.pkl`**  
-  A pickled version of the mapping between kinases and their respective global embeddings.  
+Kinases are critical drug targets, but achieving selectivity is difficult. Inhibitors often bind to multiple kinases (off-target effects), leading to toxicity.
+**Goal:** Predict the binding affinity ($K_d$) and selectivity score of small molecules across 442 kinases using only their chemical structure and the kinase protein sequence.
 
-- **`Table-1.xlsx`**  
-  A table containing additional information about each kinase.  
+## 🚀 Our Approach
 
-- **`Table-2_train.xlsx`**  
-  A table containing selectivity scores and SMILES strings for the training set.  
+We developed a two-stage pipeline combining feature engineering, dimensionality reduction, and deep learning.
 
-- **`Table-3_train.xlsx`**  
-  A table of Kd values for the training set.
-  **Note:** Some values were initally left blank as the dissociation constant was too high, and were replaced by the placeholder value 10001.
+### 1. Feature Engineering
 
-- **`starter_notebook.ipynb`**  
-  A Jupyter notebook provided as an **example code** to help you get started with the challenge. 
+-   **Inhibitors (Small Molecules):** Extracted 2048-bit Morgan Fingerprints (ECFP4) and physicochemical descriptors (LogP, Molecular Weight, TPSA, etc.) using **RDKit**.
+-   **Kinases (Proteins):** Utilized **ProteinBERT** embeddings to capture deep semantic representations of amino acid sequences, supplemented with biological classifications (Kinase Group, Mutation status).
 
-### Submission Instructions  
-- Put your **notebook** and **slides** in a **GitHub repository** and post it on [Devpost](https://pharmahacks-2025.devpost.com/?ref_feature=challenge&ref_medium=discover&_gl=1*oayv4s*_gcl_au*MTE2NjM0NTYwLjE3MzcyMTQ1NjI.*_ga*MTc5OTkxOTUxNS4xNzM3MjE0NTYy*_ga_0YHJK3Y10M*MTc0MTk5MjU5Ni4yOS4xLjE3NDE5OTUxNjAuMC4wLjA)
+### 2. Dimensionality Reduction
 
+-   **PCA on Protein Embeddings:** Reduced high-dimensional ProteinBERT vectors to 150 principal components (retaining >95% variance).
+-   **XGBoost Feature Selection:** Filtered sparse Morgan Fingerprint bits to the top ~50 most predictive features based on information gain.
+-   **Result:** Compressed input space from ~17,000 features to a dense, highly relevant vector of 224 features.
 
-### Important Notes  
+### 3. The Model (`kiNNet`)
 
-- You are **not required** to use `all_seqs.pkl`,`global_embeddings_max_length.npy` and `global_embeddings_map.pkl`; they are provided for **your convenience**.  
-- The **test set will be released on Sunday at 11 AM**.
+-   **Architecture:** A deep feed-forward neural network (PyTorch).
+    -   3 Hidden Layers (512 -> 512 -> 64 neurons).
+    -   **Batch Normalization** and **Dropout** (0.5) for regularization.
+    -   **ReLU** activation.
+-   **Objective:** Regression on log-transformed $K_d$ values.
+-   **Performance:** Achieved **73.6% accuracy** in classifying binding affinity thresholds on the test set.
+
+## 🛠️ Tech Stack
+
+-   **ML/DL:** PyTorch, XGBoost, Scikit-learn
+-   **Bioinformatics:** RDKit, ProteinBERT, Biopython
+-   **Data Processing:** Pandas, NumPy
+
+## 📂 Repository Structure
+
+-   `data/`: Contains training datasets, kinase embeddings, and molecular features.
+-   `kinase_selectivity_prediction.ipynb`: Complete pipeline: preprocessing, feature extraction, PCA/XGBoost reduction, training, and evaluation.
+-   `regression_model.pth`: Trained model weights.
+
+## 🏆 Results
+
+Our solution secured **2nd Place Overall** and the **Best Pitch Award** at PharmaHacks 2025. The model demonstrated that intelligent dimensionality reduction on high-quality biological embeddings can outperform brute-force approaches on limited datasets.
+
+---
+
+_Team: Kointoss Solutions_
